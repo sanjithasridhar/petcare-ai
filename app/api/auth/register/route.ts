@@ -1,0 +1,1 @@
+export { handleRegister as POST } from "@/lib/auth-api";

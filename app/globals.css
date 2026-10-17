@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #f7f4ed;
+  --foreground: #1c1c1c;
+
+  /* Luxury Velvet Color Coding Tokens */
+  --color-velvet-burgundy: #5c1618;
+  --color-velvet-wine: #7e1d23;
+  --color-velvet-rose: #d65d6c;
+  --color-warm-amber: #c8832a;
+  --color-amber-gold: #e5a93b;
+  --color-hunter-emerald: #0f3d31;
+  --color-emerald-light: #2d6a4f;
+  --color-royal-amethyst: #6a2588;
+  --color-sapphire-ocean: #1e4d8c;
+  --color-cream-parchment: #f4efe6;
+  --color-cream-card: #fbf9f4;
+  --color-cream-border: #e6ddce;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Glassmorphism helpers */
+.glass-card {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(230, 221, 206, 0.7);
+}
+
+.glass-card-dark {
+  background: rgba(92, 22, 24, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Shimmer and subtle glow effects */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 4s ease-in-out infinite;
+}
+

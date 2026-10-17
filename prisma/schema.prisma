@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  pets          Pet[]
+  experiments   Experiment[]
+  surveys       Survey[]
+  interviews    Interview[]
+  insightReports InsightReport[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest Float
+}
+
+model LoginLockout {
+  identifierHash  String    @id
+  failures        Int
+  windowStartedAt DateTime
+  lockedUntil     DateTime?
+}
+
+model Pet {
+  id        String   @id @default(cuid())
+  name      String
+  species   String
+  breed     String?
+  age       Int?
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model Experiment {
+  id                 String   @id @default(cuid())
+  clientRequestId    String   @unique
+  name               String   @default("")
+  category           String   @default("")
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productName        String
+  productDescription String   @db.Text
+  targetAudience     String   @db.Text
+  researchObjectives String   @db.Text
+  personaCount       Int      @default(6)
+  status             String   @default("pending")
+  errorMessage       String?  @db.Text
+  personas           Persona[]
+  surveys            Survey[]
+  interviews         Interview[]
+  insightReports     InsightReport[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Persona {
+  id                  String      @id @default(cuid())
+  experimentId        String?
+  experiment          Experiment? @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  name                String
+  age                 Int
+  occupation          String
+  segment             String
+  context             String      @db.Text
+  coreNeeds           String      @db.Text
+  primaryConcern      String      @db.Text
+  surveyResponses     SurveyResponse[]
+  interviews          Interview[]
+  personalityTraits   String[]
+  goals               String[]
+  preferences         String[]
+  behaviorPatterns    String      @default("") @db.Text
+  painPoints          String[]
+  psychologicalProfile String     @default("") @db.Text
+  productOpinions     String      @default("") @db.Text
+  createdAt           DateTime    @default(now())
+
+  @@index([experimentId])
+}
+
+model Survey {
+  id              String           @id @default(cuid())
+  clientRequestId String           @unique
+  experimentId    String
+  experiment      Experiment       @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  status          String           @default("draft") // draft | running | completed | partial | failed
+  personaIds      String[]
+  questions       SurveyQuestion[]
+  responses       SurveyResponse[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([experimentId])
+}
+
+model SurveyQuestion {
+  id        String           @id @default(cuid())
+  surveyId  String
+  survey    Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  position  Int
+  text      String           @db.Text
+  responses SurveyResponse[]
+
+  @@unique([surveyId, position])
+}
+
+model SurveyResponse {
+  id         String         @id @default(cuid())
+  surveyId   String
+  survey     Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questionId String
+  question   SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  personaId  String
+  persona    Persona        @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  text       String         @db.Text
+  createdAt  DateTime       @default(now())
+
+  @@unique([questionId, personaId])
+  @@index([surveyId])
+}
+
+model Interview {
+  id             String             @id @default(cuid())
+  experimentId   String
+  experiment     Experiment         @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  personaId      String
+  persona        Persona            @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         String             @default("Active")
+  summary        String             @default("") @db.Text
+  summarizedCount Int               @default(0)
+  messages       InterviewMessage[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([experimentId])
+  @@index([userId])
+}
+
+model InterviewMessage {
+  id          String    @id @default(cuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  position    Int
+  role        String    // researcher | persona
+  content     String    @db.Text
+  clientId    String?   @unique
+  createdAt   DateTime  @default(now())
+
+  @@unique([interviewId, position])
+}
+
+model InsightReport {
+  id            String     @id @default(cuid())
+  experimentId  String
+  experiment    Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data          Json
+  surveyCount   Int        @default(0)
+  responseCount Int        @default(0)
+  interviewCount Int       @default(0)
+  createdAt     DateTime   @default(now())
+
+  @@index([experimentId])
+}
